@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Web WhatsApp</string>
+    <string name="desktop_mode">Desktop mode</string>
+    <string name="desktop_mode_on">Desktop mode ON</string>
+    <string name="desktop_mode_off">Desktop mode OFF</string>
+</resources>

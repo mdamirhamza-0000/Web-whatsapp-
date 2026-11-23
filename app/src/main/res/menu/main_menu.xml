@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Upper right corner toggle: desktop mode on/off -->
+    <item
+        android:id="@+id/action_desktop_mode"
+        android:icon="@drawable/ic_desktop_off"
+        android:title="@string/desktop_mode"
+        app:showAsAction="always" />
+</menu>
