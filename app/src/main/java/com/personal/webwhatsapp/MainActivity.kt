@@ -26,6 +26,9 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.webkit.ScriptHandler
+import androidx.webkit.WebViewCompat
+import androidx.webkit.WebViewFeature
 
 class MainActivity : AppCompatActivity() {
 
@@ -37,6 +40,7 @@ class MainActivity : AppCompatActivity() {
 
     private var fileCallback: ValueCallback<Array<Uri>>? = null
     private var pendingPermissionRequest: PermissionRequest? = null
+    private var desktopScript: ScriptHandler? = null
 
     private val fileChooserLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -235,6 +239,17 @@ class MainActivity : AppCompatActivity() {
             builtInZoomControls = desktopMode
             displayZoomControls = false
         }
+
+        // Make the page believe this is a real desktop Chrome (client hints, platform, touch).
+        desktopScript?.remove()
+        desktopScript = null
+        if (desktopMode && WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
+            desktopScript = WebViewCompat.addDocumentStartJavaScript(
+                webView,
+                DESKTOP_SPOOF_JS,
+                setOf("https://web.whatsapp.com")
+            )
+        }
     }
 
     private fun hasPermission(permission: String): Boolean =
@@ -266,6 +281,34 @@ class MainActivity : AppCompatActivity() {
         private const val KEY_DESKTOP_MODE = "desktop_mode"
         private const val DESKTOP_USER_AGENT =
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-                "(KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+                "(KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+
+        private const val DESKTOP_SPOOF_JS = """
+(function () {
+  try {
+    var brands = [
+      {brand: 'Chromium', version: '142'},
+      {brand: 'Google Chrome', version: '142'},
+      {brand: 'Not_A Brand', version: '99'}
+    ];
+    var uad = {
+      brands: brands,
+      mobile: false,
+      platform: 'Windows',
+      getHighEntropyValues: function () {
+        return Promise.resolve({
+          brands: brands, mobile: false, platform: 'Windows',
+          platformVersion: '10.0.0', architecture: 'x86', bitness: '64',
+          model: '', uaFullVersion: '142.0.0.0'
+        });
+      },
+      toJSON: function () { return {brands: brands, mobile: false, platform: 'Windows'}; }
+    };
+    Object.defineProperty(Navigator.prototype, 'userAgentData', {get: function () { return uad; }, configurable: true});
+    Object.defineProperty(Navigator.prototype, 'platform', {get: function () { return 'Win32'; }, configurable: true});
+    Object.defineProperty(Navigator.prototype, 'maxTouchPoints', {get: function () { return 0; }, configurable: true});
+  } catch (e) {}
+})();
+"""
     }
 }
